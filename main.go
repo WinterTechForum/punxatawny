@@ -5,6 +5,8 @@ import (
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"
+	"os"
+	"fmt"
 )
 
 type Person struct {
@@ -13,6 +15,7 @@ type Person struct {
 	Lastname  string   `json:"lastname,omitempty"`
 	Status    string   `json:"status,omitempty"`
 }
+
 
 var people []Person
 
@@ -56,6 +59,11 @@ func DeletePerson(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func getEnv(w http.ResponseWriter, r *http.Request) {
+	env := os.Environ()
+	json.NewEncoder(w).Encode(env)
+}
+
 
 func initPeople() {
 	people = append(people, Person{ID: "1", Firstname: "John", Lastname: "Doe", Status: "Present" })
@@ -68,9 +76,11 @@ func initPeople() {
 func main() {
 	router := mux.NewRouter()
 	initPeople()
+	router.HandleFunc("/admin/env", getEnv).Methods("GET")
 	router.HandleFunc("/people", GetPeople).Methods("GET")
 	router.HandleFunc("/people/{id}", GetPerson).Methods("GET")
 	router.HandleFunc("/people/{id}", CreatePerson).Methods("POST")
 	router.HandleFunc("/people/{id}", DeletePerson).Methods("DELETE")
+	fmt.Printf("Serving people on port 8000")
 	log.Fatal(http.ListenAndServe(":8000", router))
 }
